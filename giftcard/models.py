@@ -1,8 +1,11 @@
 from django.db import models
-from merchants.models import Merchant
+from merchants.models import Merchant, Address
+from django_extensions.db.models import TimeStampedModel
+
 
 
     
+
 
 class Card_Design(models.Model):
     design_name = models.CharField(max_length=100, null=False)
@@ -17,19 +20,18 @@ class Customer(models.Model):
     first_name = models.CharField(max_length=100, null=False)
     last_name = models.CharField(max_length=100, null=False)
     phone = models.CharField(max_length=11, null=False)
-    address = models.CharField(max_length=100, null=True)
+    address = models.ForeignKey(Address, on_delete=models.CASCADE)
 
 
 
     
 class Card(models.Model):
     quantity = models.IntegerField()
-    balance = models.IntegerField()
+    balance = models.DecimalField(max_digits=5, decimal_places=3)
     barcode = models.CharField(max_length=16, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     expire_date = models.DateTimeField()
-    wish_message = models.CharField(max_length=70, null=True)
     is_delivered = models.BooleanField(default=False)
 
     
@@ -60,11 +62,10 @@ class Card(models.Model):
 
 
 
-class Transaction(models.Model):
+class Transaction(TimeStampedModel):
     name = models.CharField(max_length=100)
-    transaction_created_at = models.DateTimeField(auto_now_add=True)
-    transaction_updated_at = models.DateTimeField(auto_now=True)
-    transaction_balance = models.IntegerField()
+    transaction_balance = models.DecimalField(max_digits=5, decimal_places=3)
+
 
     card = models.ForeignKey(Card, on_delete=models.CASCADE)
 
