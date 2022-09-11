@@ -1,12 +1,14 @@
 from django.db import models
+# from django.contrib.auth.models import User
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
 
 
 
 
 class Address(models.Model):
     line_1 = models.TextField(max_length=100, null=False)
-    line_2 = models.TextField(max_length=100, null=True)
+    line_2 = models.TextField(max_length=100, null=False)
     city = models.TextField(max_length=50, null=False)
     governorate = models.TextField(max_length=100, null=False)
 
@@ -14,17 +16,16 @@ class Address(models.Model):
 
 
 
-class Merchant(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+class Merchant(User):
     address = models.OneToOneField(Address, on_delete=models.CASCADE)
-    company = models.CharField(max_length=100, null=False)
+    # company = models.CharField(max_length=100, null=False)
     phone_number = models.CharField(max_length=11, null=False)
     
 
     
 
 class Store(models.Model):
-    name = models.CharField(max_length=50,null=False)
+    store_name = models.CharField(max_length=50,null=False)
     merchant = models.ForeignKey(Merchant, on_delete=models.CASCADE)
 
     ONLINE = 'ON'

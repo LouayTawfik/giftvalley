@@ -1,3 +1,8 @@
+from dotenv import load_dotenv
+import os
+
+load_dotenv('.env')
+
 """
 Django settings for giftvalley project.
 
@@ -20,10 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-w+xr0@$9jmxae4)eelpc@#b8tm1fuom)#xaij*w2gq-6njeag)'
+SECRET_KEY = os.environ.get('SECRET_KEY', None)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', None)
 
 ALLOWED_HOSTS = []
 
@@ -39,6 +44,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'django_extensions',
+
+    'rest_framework',
+
+    'rest_framework.authtoken',
 
     'merchants',
     'giftcard',
@@ -79,9 +88,13 @@ WSGI_APPLICATION = 'giftvalley.wsgi.application'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    'default' :{
+        'ENGINE': 'django.db.backends.postgresql',
+        "NAME": os.environ.get("DB_DATABASE"),
+        "USER": os.environ.get("DB_USERNAME"),
+        "PASSWORD": os.environ.get("DB_PASSWORD"),
+        "HOST": os.environ.get("DB_HOST"),
+        "PORT": os.environ.get("DB_PORT"),
     }
 }
 
@@ -126,3 +139,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'merchants.authentication.TokenAuthentication',
+    ]
+}
