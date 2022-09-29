@@ -30,7 +30,6 @@ from .serializers import (
 
 
 class CardActivationAPIView(APIView):
-    authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def put(self, request, card_id, *args, **kwargs):
