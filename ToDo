@@ -1,0 +1,32 @@
+Add Project description in readme.md and other info about project
+Add Allowd Hosts in .env
+
+
+remove all uneeded code and spaces
+remove all uneeded files
+
+
+[Done!]move all code in views.py to api.py file
+
+
+[Done!]get Address Model From Eman
+
+
+[Done!]For Now Allow Only Create Merchant 
+
+
+[Done!]All Views Should Be ModelViewSet
+
+
+Delete His Store Data  -> in progress
+
+
+
+Finish
+    * [Done!]Create Merchant API
+    * [Done!]Merchant Can Only Retrieve, Update, Delete His Data APIs
+    * [Half-finished]APIs For Store
+
+    * API For Create Card
+    * API For List Card
+    * API For Retrieve, Update Card

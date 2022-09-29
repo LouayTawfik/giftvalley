@@ -1,86 +1,180 @@
 from rest_framework import serializers
-
-from .models import Address, Merchant, Store
-from django.contrib.auth.models import User
+from .models import ( 
+    Address,
+    City,
+    Governorate,
+    Merchant,
+    Store,
+)
 from django.contrib.auth.hashers import make_password
 
 
-
-
-class UserSerializer(serializers.ModelSerializer):
+class GovernorateSerializer(serializers.ModelSerializer):
     class Meta:
-        model =  User
-        fields = ['email', 'username', 'password', 'first_name', 'last_name']
+        model = Governorate
+        fields = '__all__'
 
 
-
+class CitySerializer(serializers.ModelSerializer):
+    governorate = GovernorateSerializer()
+    class Meta:
+        model = City
+        fields = '__all__'
 
 
 class AddressSerializer(serializers.ModelSerializer):
+    city = CitySerializer()
     class Meta:
         model = Address
-        fields = [
-            'line_1',
-            'line_2',
-            'city',
-            'governorate',
-        ]
-
+        fields = '__all__'
 
 
 class StoreSerializer(serializers.ModelSerializer):
+    address = AddressSerializer(required=False)
     class Meta:
         model = Store
         fields = '__all__'
 
+    def create(self, validated_data):
+        if validated_data['type'] == 'OFFLINE':
+            governorate_data = validated_data['address']['city']['governorate']
+            governorate = Governorate.objects.create(
+                **governorate_data
+            )
+            
+            city_data = validated_data['address']['city']
+            city_data.pop('governorate')
+            city = City.objects.create(
+                **city_data,
+                governorate=governorate
+            )
 
-        
-        
+            
+            address_data = validated_data['address']
+            address_data.pop('city')
+            address = Address.objects.create(
+                **address_data,
+                city=city
+            )
+            
+            validated_data.pop('address')
+            store = Store.objects.create(
+                **validated_data,
+                address = address,
+            )
+        else:
+            store = Store.objects.create(
+                **validated_data,
+            )
+
+        return store
 
 
 class MerchantSerializer(serializers.ModelSerializer):   
     address = AddressSerializer()
-    store = StoreSerializer()
-
+    store = StoreSerializer(many=True)
     class Meta:
         model = Merchant
-        fields = [
-            'first_name',
-            'last_name',
-            'email',
-            'password',
-            'username',
-            'address',
-            'store',
-            'phone_number',
-        ]
-        extra_kwargs = {'first_name': {'required': True}, 'last_name': {'required': True}, 'email': {'required': True}, 'password': {'required': True}, 'username': {'required': True}}
-
+        fields = '__all__'
+        extra_kwargs = {
+            'last_login': {'write_only': True}, 
+            'is_superuser': {'write_only': True},
+            'is_staff': {'write_only': True},
+            'is_active': {'write_only': True},
+            'groups': {'write_only': True}, 
+            'password': {'write_only': True, 'min_length': 8},
+            'user_permissions': {'write_only': True}
+        }
 
     def create(self, validated_data):
+        governorate_data = validated_data['address']['city']['governorate']
+        governorate = Governorate.objects.create(
+            **governorate_data
+        )
+
+        city_data = validated_data['address']['city']
+        city_data.pop('governorate')
+        city = City.objects.create(
+                **city_data,
+                governorate=governorate
+        )
+
         address_data = validated_data['address']
-        store_data  = validated_data['store']
-
-        address = Address.objects.create(
-            line_1 = address_data['line_1'],
-            line_2 = address_data['line_2'],
-            city = address_data['city'],
-            governorate = address_data['governorate']
+        address_data.pop('city')
+        address=Address.objects.create(
+            **address_data,
+            city=city
         )
-
-        store = Store.objects.create(
-            store_name = store_data['store_name'],
-            type = store_data['type']
-            
-        )
-
-        validated_data['store'] = store
-        validated_data['address'] = address
+        
         validated_data['password'] = make_password(validated_data['password'])
-        instance = super().create(validated_data)
-        return instance
+        stores_data = validated_data.pop('store')
+        validated_data.pop('address')
+        merchant = Merchant.objects.create(
+            **validated_data,
+            address = address,
+        )
+        
+        for store_data in stores_data:
+            if store_data['type'] == 'OFFLINE':
+                governorate_data = store_data['address']['city']['governorate']
+                governorate = Governorate.objects.create(
+                    **governorate_data
+                )
+                city_data = store_data['address']['city']
+                
+                city_data.pop('governorate')
+                city = City.objects.create(
+                    **city_data,
+                    governorate=governorate
+                )
+                address_data = store_data['address']
+                address_data.pop('city')
+
+                address= Address.objects.create(
+                    **address_data,
+                    city=city
+                )
+                store_data.pop('address')
+
+                Store.objects.create(
+                    **store_data,
+                    address = address,
+                    merchant=merchant
+                )
+            else:
+                Store.objects.create(
+                    **store_data,
+                    merchant=merchant
+                )
+        return merchant
 
 
+class ListStoreSerializer(serializers.ModelSerializer):
+    address = AddressSerializer(required=False)
+    merchant = serializers.StringRelatedField()
+    class Meta:
+        model = Store
+        fields = '__all__'
+        extra_kwargs = {
+            'last_login': {'write_only': True},
+            'is_superuser': {'write_only': True},
+            'is_staff': {'write_only': True},
+            'is_active': {'write_only': True},
+            'groups': {'write_only': True}
+        }
 
 
+class UpdateStoreSerializer(serializers.ModelSerializer):
+    address = AddressSerializer(required=False)
+    merchant = MerchantSerializer()
+    class Meta:
+        model = Store
+        fields = '__all__'
+        extra_kwargs = {
+            'last_login': {'write_only': True},
+            'is_superuser': {'write_only': True},
+            'is_staff': {'write_only': True},
+            'is_active': {'write_only': True},
+            'groups': {'write_only': True}
+        }
         

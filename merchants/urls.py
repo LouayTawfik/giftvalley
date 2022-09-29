@@ -1,15 +1,26 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework.authtoken.views import obtain_auth_token
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .views import MerchantCreateGenericView, MerchantListGenericView
 
+from rest_framework import routers
+
+from . import api
+
+
+
+router = routers.DefaultRouter()
+router.register('merchants', api.MerchantModelViewSet),
+router.register('stores', api.StoreModelViewSet)
 
 
 urlpatterns = [
-    # path('auth/', obtain_auth_token),
-    # path('', views.MerchantGenericListView.as_view()),
-    # path('', MerchantGenericView.as_view())
-    path('', MerchantCreateGenericView.as_view()),
-    path('list', MerchantListGenericView.as_view())
-    # path('<int:pk>', views.AddressDetailView.as_view()),
+    path('', include(router.urls)),
+    path('auth/', obtain_auth_token),
+
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
+
+
+
